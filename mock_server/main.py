@@ -155,7 +155,8 @@ def get_indicators(
             },
         )
 
-
+    #In production, filtering should be applied before object\
+    #instantiation to avoid allocating objects that will be discarded.
     indicators = [Indicator(**item) for item in SAMPLE_DATA]
 
     #More friendly to chop instead of returning error

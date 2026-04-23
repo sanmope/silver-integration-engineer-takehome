@@ -21,10 +21,18 @@ class Config(BaseSettings):
     credentials_path: str = "credentials.enc"
     
     # fernet key and aws missing
+    fernet_key: str = ""
+
+    integration_ids: list[str] = ["integration_123"]
+    sync_status = "sync_status.json"
 
     # s3
     s3_bucket: str = ""
     s3_region: str = "us-east-1"
     s3_prefix: str = "feeds/"
+
+    # boto3
+    aws_region: str = "us-east-1"
+    aws_secret_prefix: str = "augur/"
 
 config = Config() # singleton - accessible from any module

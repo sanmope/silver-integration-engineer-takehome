@@ -5,7 +5,7 @@ from cryptography.fernet import Fernet
 
 from models import Credentials
 
-from base import CredentialStore
+from credentials.base import CredentialStore
 from pydantic import BaseModel
 
 class CredentialFile(BaseModel):

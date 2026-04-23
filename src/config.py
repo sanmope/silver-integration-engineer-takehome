@@ -24,7 +24,7 @@ class Config(BaseSettings):
     fernet_key: str = ""
 
     integration_ids: list[str] = ["integration_123"]
-    sync_status = "sync_status.json"
+    sync_status: str = "sync_status.json"
 
     # s3
     s3_bucket: str = ""

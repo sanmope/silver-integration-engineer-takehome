@@ -1,4 +1,4 @@
-from base import BaseExporter
+from exporters.base import BaseExporter
 from typing import IO, Iterator
 from models import Indicator, IndicatorType, Severity
 

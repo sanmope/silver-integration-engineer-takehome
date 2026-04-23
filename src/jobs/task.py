@@ -1,11 +1,11 @@
 from models import Credentials
-from conector import ThreatVendorConnector
-from local import LocalCredentialStore
+from connector import ThreatVendorConnector
+from credentials.local import LocalCredentialStore
 from config import config
 from celery_app import app
-from sync_status import SyncStatus 
 import logging
 from datetime import datetime, timezone
+from jobs.sync_status import SyncStatus
 
 logger = logging.getLogger(__name__)
 

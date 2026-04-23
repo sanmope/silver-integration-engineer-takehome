@@ -1,0 +1,43 @@
+from abc import ABC, abstractmethod
+from typing import IO, Iterator
+
+from models import Indicator, IndicatorType, Severity
+
+class BaseExporter(ABC):
+    """Base class for indicator exporters"""
+    def __init__(
+        self,
+        indicator_types: list[IndicatorType] | None = None,
+        min_severity: Severity | None = None,
+    ):
+        self.indicator_types = indicator_types
+        self.min_severity = min_severity
+    
+    def filter(self, indicators: Iterator[Indicator]) -> Iterator[Indicator]:
+        """Apply type severity filters."""
+        severity_order = [Severity.LOW,Severity.MEDIUM,Severity.HIGH,Severity.CRITICAL]
+        min_index = severity_order.index(self.min_severity) if self.min_severity else 0
+
+        for indicator in indicators:
+            if self.indicator_types and indicator.type not in self.indicator_types:
+                continue
+            if severity_order.index(indicator.severity) < min_index:
+                continue
+            yield indicator
+    
+    @abstractmethod
+    def export(self, indicators: Iterator[Indicator], output: IO) -> int:
+        """Export indicators to output stream."""
+
+
+    @abstractmethod
+    def content_type(self) -> str:
+        """Return MMIE type for this export format."""
+
+    @abstractmethod
+    def file_extension(self) -> str:
+        """Return file extension for this export format."""
+    
+
+
+

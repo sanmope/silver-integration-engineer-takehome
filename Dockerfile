@@ -9,3 +9,5 @@ COPY src/ ./src/
 COPY mock_server/ ./mock_server/
 
 ENV PYTHONPATH=/app/src
+
+CMD ["python", "-m", "uvicorn", "mock_server.main:app", "--host", "0.0.0.0", "--port", "8000"]

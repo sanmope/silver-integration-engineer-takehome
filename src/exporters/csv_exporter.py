@@ -4,8 +4,15 @@ from models import Indicator, IndicatorType, Severity
 from csv import DictWriter
 
 class CsvExporter(BaseExporter):
+    """Exports indicators as CSV with columns: type, value, severity, tags, updated_at."""
 
     def export(self,indicators: Iterator[Indicator], output: IO) -> int:
+        """
+        Write filtered indicators to output as CSV.
+        
+        Returns:
+            Number of indicators written.
+        """
 
         count = 0
         indicators = self.filter(indicators)

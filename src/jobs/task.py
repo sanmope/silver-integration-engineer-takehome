@@ -12,6 +12,22 @@ logger = logging.getLogger(__name__)
 
 @app.task(bind=True, max_retries=3)
 def sync_vendor_indicators(self,integration_id: str):
+    """
+    Incremental sync task for a given integration.
+
+    Loads credentials, runs sync against ThreatVendor API, and updates sync status.
+    Retries up to 3 times with exponential backoff. Dead letter on max retries.
+
+    Args:
+        integration_id: ID of the integration to sync.
+
+    Returns:
+        SyncResult: fetched, new, updated, and error counts.
+
+    Raises:
+        ValueError: if no credentials found for integration_id.
+        self.retry: if a transient error occurs and retries remain.
+    """
     sync_status = SyncStatus(config.sync_status)
     try:
         store = LocalCredentialStore(

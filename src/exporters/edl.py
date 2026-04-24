@@ -3,6 +3,13 @@ from typing import IO, Iterator
 from models import Indicator, IndicatorType, Severity
 
 class EdlExporter(BaseExporter):
+    """
+    Exports indicators as plain-text EDL (one value per line).
+    Only exports IPs, domains, and URLs — hashes are excluded.
+    
+    Args:
+        min_severity: Minimum severity to include.
+    """
     def __init__(
         self,
         min_severity: Severity | None = None
@@ -14,6 +21,12 @@ class EdlExporter(BaseExporter):
 
 
     def export(self, indicators: Iterator[Indicator], output: IO) -> int:
+        """
+        Write filtered indicator values to output, one per line.
+        
+        Returns:
+            Number of indicators written.
+        """
         count = 0
         indicators = self.filter(indicators)
 

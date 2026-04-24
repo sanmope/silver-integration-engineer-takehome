@@ -29,13 +29,28 @@ def atomic_write_integrations_file(path: Path, integrations: dict) -> None:
     
 
 class LocalCredentialStore(CredentialStore):
+    """
+    Store, load and delete credentials 
+
+    Args:
+    path: to encrypted credentials in drive
+    fernet: fernet_key
+    """
     def __init__(self, path: str, fernet_key: bytes):
         self._path = Path(path)
         self._fernet = Fernet(fernet_key)
         
 
     def get(self, integration_id: str) -> Credentials | None:
-
+        """
+        Retrieve credentials for an integration.
+        
+        Args:
+            integration_id: ID of the integration.
+        
+        Returns:
+            Credentials if found, None otherwise.
+        """
         #Read from file
         c_file = load_credential_file(self._path)
         if c_file.integrations == {}:
@@ -55,6 +70,12 @@ class LocalCredentialStore(CredentialStore):
         
 
     def store(self, integration_id: str, credentials: Credentials) -> None:
+        """Store encrypted credentials for an integration.
+    
+        Args:
+            integration_id: ID of the integration.
+            credentials: Credentials to store.
+        """
         
         
         c_file = load_credential_file(self._path)
@@ -77,6 +98,12 @@ class LocalCredentialStore(CredentialStore):
 
 
     def delete(self, integration_id: str) -> None:
+        """Delete credentials for an integration.
+        
+        Args:
+            integration_id: ID of the integration.
+        """
+
         c_file = load_credential_file(self._path)
         if c_file.integrations == {}:
             return None

@@ -10,6 +10,18 @@ logger = logging.getLogger(__name__)
 
 
 class ThreatVendorConnector():
+    """Connector for ThreatVendor API.
+    
+    Handles OAuth2 authentication, token refresh, paginated indicator
+    fetching with rate limit and retry support, and incremental sync.
+    
+    Args:
+        client_id: OAuth2 client ID.
+        client_secret: OAuth2 client secret.
+        base_url: Base URL of the ThreatVendor API.
+        timeout: HTTP request timeout in seconds.
+        max_retries: Maximum retries on transient server errors.
+    """
 
     def __init__(
             self,
@@ -33,6 +45,9 @@ class ThreatVendorConnector():
         self._client = httpx.Client(timeout=timeout)
 
     def close(self) -> None:
+        """
+        Closes the underlying HTTP client connection.
+        """
         self._client.close()
 
     def __enter__(self):
@@ -42,6 +57,11 @@ class ThreatVendorConnector():
         self.close()
 
     def authenticate(self) -> None:
+        """Get OAuth2 access token using client credentials.
+        Raises:
+            Exception: if credentials are invalid (401)
+        """
+
         response = self._client.post(
             f"{self.base_url}/oauth/token",
             data = {
@@ -63,6 +83,9 @@ class ThreatVendorConnector():
 
 
     def _ensure_authenticated(self) -> None:
+        """
+        Validates if token has expired, if so, reatuthenticates.
+        """
         if not self._token_expiry or self._token_expiry <=  datetime.now(tz=timezone.utc) + timedelta(seconds=60):
             self.authenticate()
 
@@ -73,6 +96,19 @@ class ThreatVendorConnector():
         indicator_type: str | None = None,
         severity: str | None = None,
     ) -> Iterator[Indicator]:
+        """
+        Fetch indicators by paginating and filtering by type and severity.
+
+        Args:
+            updated_since: Filter indicators updated after this datetime.
+            indicator_type: Filter by indicator type.
+            severity: Filter by severity level.
+        
+        Returns indicator (Yield)
+
+        Raises: 
+            Exception: if Max_Retries exceded
+        """
 
         self._ensure_authenticated()
 
@@ -129,6 +165,17 @@ class ThreatVendorConnector():
 
 
     def sync(self, last_sync: datetime | None = None) -> SyncResult:
+        """
+        Runs Complete Sync: Fetches all indicators updated since last_sync.
+        Tracks metrics (new,updated,errors) 
+
+        Returns: 
+            SyncResult
+
+        Raises: 
+            Error if sync failed
+
+        """
         started_at = datetime.now(tz=timezone.utc)
         indicators = self.fetch_indicators(last_sync)
 

@@ -7,8 +7,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 class StixExporter(BaseExporter):
+    """
+    Exports indicators as a STIX 2.1 bundle using the stix2 library.
+    Unknown indicator types are logged as warnings and skipped.
+    """
     
     def export(self,indicators: Iterator[Indicator], output: IO) -> int:
+        """
+        Write filtered indicators as a STIX 2.1 JSON bundle to output.
+        
+        Returns:
+            Number of indicators written.
+        """
 
         count = 0
         indicators = self.filter(indicators)

@@ -44,7 +44,7 @@ The demo auto-generates and saves a `FERNET_KEY` to `.env` if one does not exist
 
 ### Live Demo
 - Mock Vendor API: https://silver-integration-engineer-takehome-production.up.railway.app/docs
-- API: https://<tu-url-api>.up.railway.app/docs
+- API: https://heartfelt-spirit-production-d05b.up.railway.app/docs
 
 ---
 

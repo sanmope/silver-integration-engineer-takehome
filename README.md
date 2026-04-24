@@ -1,6 +1,6 @@
 # Augur Security — Vendor Integration Connector
 
-Python connector for syncing threat indicators from a third-party vendor API, with scheduled background jobs, encrypted credential storage, and multi-format feed exports.
+A production-pattern connector that pulls threat indicators from a third-party security vendor, syncs them on a schedule, stores them securely, and exports them in industry-standard formats (EDL, CSV, STIX 2.1). Built to demonstrate real-world failure handling: token expiry mid-sync, rate limiting, transient server errors, and incremental sync.
 
 ---
 
@@ -29,38 +29,19 @@ cp .env.example .env
 
 ---
 
-## Running with Docker
-
-```bash
-docker-compose up
-```
-
-Starts: `redis`, Celery `worker`, Celery `beat`, and `mock_server` at `http://localhost:8000`.
-
----
-
 ## Demo
 
-### With Docker (recomendado)
 ```bash
+# Start all services (Redis, Celery worker, Celery beat, mock vendor API)
 docker-compose up
+
+# In a separate terminal — store credentials and trigger a sync
 python demo.py
 ```
 
-### Without Docker
-```bash
-# Terminal 1 — mock server
-PYTHONPATH=src uvicorn mock_server.main:app --port 8000
+The demo auto-generates and saves a `FERNET_KEY` to `.env` if one does not exist.
 
-# Terminal 2 — demo
-python demo.py
-```
-
-The demo auto-generates and saves a `FERNET_KEY` to `.env` if one doesn't exist.
-
-### Live Demo
-- Mock Vendor API: https://silver-integration-engineer-takehome-production.up.railway.app/docs
-- API: https://<tu-url-api>.up.railway.app/docs
+---
 
 ## Running Tests
 
@@ -80,7 +61,6 @@ PYTHONPATH=src uvicorn src.api.main:app --port 8001 --reload
 | Endpoint | Description |
 |---|---|
 | `GET /health` | Connector auth validity, last sync status, credential expiry |
-| `GET /health?integration_id=X` | Same, for a specific integration |
 | `GET /status/{integration_id}` | Sync status for a specific integration |
 | `POST /sync/{integration_id}` | Trigger a manual sync |
 

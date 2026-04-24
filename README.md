@@ -41,13 +41,13 @@ Starts: `redis`, Celery `worker`, Celery `beat`, and `mock_server` at `http://lo
 
 ## Demo
 
-### Con Docker (recomendado)
+### With Docker (recomendado)
 ```bash
 docker-compose up
 python demo.py
 ```
 
-### Sin Docker
+### Without Docker
 ```bash
 # Terminal 1 — mock server
 PYTHONPATH=src uvicorn mock_server.main:app --port 8000
@@ -57,6 +57,10 @@ python demo.py
 ```
 
 The demo auto-generates and saves a `FERNET_KEY` to `.env` if one doesn't exist.
+
+### Live Demo
+- Mock Vendor API: https://silver-integration-engineer-takehome-production.up.railway.app/docs
+- API: https://<tu-url-api>.up.railway.app/docs
 
 ## Running Tests
 

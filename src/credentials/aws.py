@@ -11,6 +11,8 @@ class AwsCredentialStore(CredentialStore):
 
 
     def get(self, integration_id: str) -> Credentials | None:
+        if not integration_id or not integration_id.strip():
+            raise ValueError("integration_id cannot be empty")
         try:
             response = self._client.get_secret_value(SecretId=f'{self._prefix}{integration_id}')
             return Credentials(**json.loads(response['SecretString']))

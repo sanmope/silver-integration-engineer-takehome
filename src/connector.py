@@ -50,7 +50,7 @@ class ThreatVendorConnector():
                 "grant_type": "client_credentials",
             },
         )
-
+        print(f"Authenticating against: {self.base_url}/oauth/token")
         try:
             response.raise_for_status()
         except httpx.HTTPStatusError as e:

@@ -50,3 +50,7 @@ class Credentials(BaseModel):
     access_token: str | None = None
     token_expiry: datetime | None = None
 
+class HealthStatus(BaseModel):
+    status: str
+    last_sync: datetime | None = None
+    last_status: str

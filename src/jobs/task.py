@@ -7,6 +7,7 @@ import logging
 from datetime import datetime, timezone
 from jobs.sync_status import SyncStatus
 
+
 logger = logging.getLogger(__name__)
 
 @app.task(bind=True, max_retries=3)
@@ -27,7 +28,7 @@ def sync_vendor_indicators(self,integration_id: str):
         last_sync = datetime.fromisoformat(status["last_sync"]) if status and "last_sync" in status else None
 
         #Iniziaize Conector
-        with ThreatVendorConnector(creds.client_id, creds.client_secret) as connector:
+        with ThreatVendorConnector(creds.client_id, creds.client_secret, base_url=config.base_url) as connector:
             sync_result =  connector.sync(last_sync)
             sync_status.update(
                 integration_id,

@@ -4,3 +4,5 @@ __pycache__/
 *.enc
 .pytest_cache/
 .venv/
+
+celerybeat-schedule

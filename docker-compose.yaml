@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  worker:
+    build: .
+    command: python -m celery -A celery_app worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - BROKER_URL=redis://redis:6379/0
+      - BACKEND_URL=redis://redis:6379/1
+      - PYTHONPATH=/app/src
+    depends_on:
+      - redis
+
+  beat:
+    build: .
+    command: python -m celery -A celery_app beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - BROKER_URL=redis://redis:6379/0
+      - BACKEND_URL=redis://redis:6379/1
+      - PYTHONPATH=/app/src
+    depends_on:
+      - redis
+
+  mock_server:
+    build: .
+    command: python -m uvicorn mock_server.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app/src

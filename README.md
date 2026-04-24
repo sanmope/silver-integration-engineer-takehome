@@ -1,258 +1,128 @@
-# Augur Security — Senior Integration Engineer Take-Home
+# Augur Security — Vendor Integration Connector
 
-## Overview
-
-Build a **Vendor Integration Connector** that demonstrates your ability to consume third-party security APIs, handle authentication, manage background sync jobs, and export threat data in industry-standard formats.
-
-**Time estimate:** 4-5 hours
-
-**Deliverable:** GitHub repository with working code and documentation
+Python connector for syncing threat indicators from a third-party vendor API, with scheduled background jobs, encrypted credential storage, and multi-format feed exports.
 
 ---
 
-## The Scenario
+## Setup
 
-Augur needs to integrate with a new security vendor. Your job is to build a connector that:
-
-1. Authenticates using OAuth2 client credentials
-2. Pulls threat indicators with pagination and rate limiting
-3. Syncs data on a schedule with proper error handling
-4. Exports data in multiple formats (EDL, STIX, CSV)
-
-We provide a mock vendor API specification for you to integrate against.
-
----
-
-## Part 1: Mock Vendor API
-
-We've defined a mock "ThreatVendor" API. You can either:
-
-- **Option A:** Build the mock API yourself (adds ~30 min, shows full-stack thinking)
-- **Option B:** Mock the responses in your connector tests (faster)
-
-See `mock-api-spec.md` for the full API specification.
-
----
-
-## Part 2: Connector Implementation (40%)
-
-Build a Python connector class with the following capabilities:
-
-```python
-class ThreatVendorConnector:
-    def __init__(self, client_id: str, client_secret: str, base_url: str):
-        ...
-    
-    def authenticate(self) -> None:
-        """Get OAuth token, handle expiry and refresh."""
-        
-    def fetch_indicators(self, updated_since: datetime | None = None) -> Iterator[Indicator]:
-        """Paginate through all indicators, yielding normalized objects."""
-        
-    def sync(self, last_sync: datetime | None = None) -> SyncResult:
-        """Full sync operation with metrics (fetched, new, updated, errors)."""
+```bash
+git clone https://github.com/sanmope/silver-integration-engineer-takehome
+cd silver-integration-engineer-takehome
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 ```
 
-**Requirements:**
+### Environment variables
 
-- OAuth2 token management (fetch, cache, auto-refresh before expiry)
-- Pagination handling (follow `has_more` until exhausted)
-- Rate limiting (respect 429, use Retry-After header, exponential backoff)
-- Retry logic (transient failures with configurable max retries)
-- Timeout handling
-- Proper logging (debug for requests, info for sync progress, error for failures)
-
-**Deliverables:**
-
-- `connector.py` — Connector class
-- `models.py` — Pydantic models for Indicator, SyncResult, etc.
-- Unit tests mocking the HTTP layer
+| Variable | Description | Default |
+|---|---|---|
+| `BASE_URL` | ThreatVendor API base URL | `https://api.threatvendor.example.com` |
+| `FERNET_KEY` | Fernet encryption key for local credential store | — |
+| `CREDENTIALS_PATH` | Path to encrypted credentials file | `credentials.enc` |
+| `BROKER_URL` | Celery broker (Redis) | `redis://localhost:6379/0` |
+| `BACKEND_URL` | Celery result backend (Redis) | `redis://localhost:6379/1` |
+| `INTEGRATION_IDS` | Comma-separated list of integration IDs | `integration_123` |
+| `SYNC_INTERVAL_SECONDS` | Background sync interval | `900` |
 
 ---
 
-## Part 3: Credential Management (15%)
+## Running with Docker
 
-Build a simple credential store abstraction:
-
-```python
-class CredentialStore(ABC):
-    @abstractmethod
-    def get(self, integration_id: str) -> Credentials | None: ...
-    
-    @abstractmethod
-    def store(self, integration_id: str, credentials: Credentials) -> None: ...
-    
-    @abstractmethod
-    def delete(self, integration_id: str) -> None: ...
-
-class LocalCredentialStore(CredentialStore):
-    """File-based store for local dev (encrypted at rest)."""
-
-class AWSSecretsStore(CredentialStore):
-    """AWS Secrets Manager implementation (can be stubbed)."""
+```bash
+docker-compose up
 ```
 
-**Requirements:**
-
-- Abstract interface for credential storage
-- Local implementation using encrypted file (Fernet or similar)
-- AWS Secrets Manager implementation (can stub the boto3 calls)
-- Credentials model with `client_id`, `client_secret`, `access_token`, `token_expiry`
+Starts: `redis`, Celery `worker`, Celery `beat`, and `mock_server` at `http://localhost:8000`.
 
 ---
 
-## Part 4: Background Job System (25%)
+## Demo
 
-Implement a sync job that runs on a schedule:
-
-```python
-# Using Celery, RQ, or APScheduler
-
-@task
-def sync_vendor_indicators(integration_id: str) -> SyncResult:
-    """
-    1. Load credentials from store
-    2. Initialize connector
-    3. Run sync (incremental from last_sync timestamp)
-    4. Store results and update last_sync
-    5. Handle errors and retry logic
-    """
+### Con Docker (recomendado)
+```bash
+docker-compose up
+python demo.py
 ```
 
-**Requirements:**
+### Sin Docker
+```bash
+# Terminal 1 — mock server
+PYTHONPATH=src uvicorn mock_server.main:app --port 8000
 
-- Configurable schedule (e.g., every 15 minutes)
-- Incremental sync (only fetch indicators updated since last successful sync)
-- Error handling with retry (max 3 attempts, exponential backoff)
-- Dead letter handling (after max retries, log and alert)
-- Sync status tracking (last_sync, last_status, error_count)
-
-**Deliverables:**
-
-- `tasks.py` — Celery/RQ task
-- `sync_status.py` — Status tracking (can be simple JSON file or SQLite)
-- Show how you'd monitor failed jobs
-
----
-
-## Part 5: Feed Exports (20%)
-
-Export synced indicators in three formats:
-
-### 1. EDL (External Dynamic List)
-
-Plain text, one indicator per line:
-
-```
-185.220.101.34
-192.168.1.100
-malware-c2.evil.com
+# Terminal 2 — demo
+python demo.py
 ```
 
-### 2. CSV
+The demo auto-generates and saves a `FERNET_KEY` to `.env` if one doesn't exist.
 
-```csv
-type,value,severity,tags,updated_at
-ip,185.220.101.34,critical,"tor-exit,botnet",2026-02-10T14:22:00Z
-domain,malware-c2.evil.com,high,c2,2026-02-08T00:00:00Z
+## Running Tests
+
+```bash
+pytest -v
+pytest --cov=src --cov-report=term-missing
 ```
 
-### 3. STIX 2.1 Bundle
+---
 
-```json
-{
-  "type": "bundle",
-  "id": "bundle--uuid",
-  "objects": [
-    {
-      "type": "indicator",
-      "id": "indicator--uuid",
-      "pattern": "[ipv4-addr:value = '185.220.101.34']",
-      "pattern_type": "stix",
-      "valid_from": "2026-02-10T14:22:00Z",
-      "labels": ["tor-exit", "botnet"]
-    }
-  ]
-}
+## API (Bonus)
+
+```bash
+PYTHONPATH=src uvicorn src.api.main:app --port 8001 --reload
 ```
 
-**Requirements:**
+| Endpoint | Description |
+|---|---|
+| `GET /health` | Connector auth validity, last sync status, credential expiry |
+| `GET /health?integration_id=X` | Same, for a specific integration |
+| `GET /status/{integration_id}` | Sync status for a specific integration |
+| `POST /sync/{integration_id}` | Trigger a manual sync |
 
-- Filter by type (ip, domain, hash) and severity
-- Efficient streaming for large datasets (don't load all into memory)
-- S3 upload capability (can stub boto3, show the interface)
-
-**Deliverables:**
-
-- `exporters/edl.py`, `exporters/csv_exporter.py`, `exporters/stix.py`
-- Base exporter class with common filtering logic
-- Example of S3 upload (stubbed is fine)
+Swagger UI available at `http://localhost:8001/docs`.
 
 ---
 
-## Evaluation Criteria
+## Design Decisions
 
-| Category | Weight | What We're Looking For |
-|----------|--------|------------------------|
-| **Connector Quality** | 40% | Auth handling, pagination, rate limiting, retries, error handling |
-| **Job System** | 25% | Scheduling, incremental sync, failure handling, status tracking |
-| **Feed Exports** | 20% | Correct formats, filtering, streaming for large data |
-| **Credential Management** | 15% | Clean abstraction, encryption, AWS interface |
+**Connector**
+- Generator in `fetch_indicators` — O(1) memory per page, regardless of dataset size
+- `_ensure_authenticated` with 60s buffer — prevents 401 mid-sync when token expires between auth check and API call
+- 429 uses `Retry-After` header exactly — no fixed delays
+- 5xx uses exponential backoff (`3 * 2^retries`); breaks out of pagination loop after `max_retries` rather than crashing
+- `force_429` flag in mock server — makes retry logic fully testable without a real rate limit
 
----
+**Credential Store**
+- `LocalCredentialStore` and `AWSSecretsStore` implement the same `CredentialStore` ABC — swapping local for AWS requires only config changes
+- All writes use `.tmp` + rename — file is never corrupted if process dies mid-write
+- Fernet encryption at rest; on-disk format is `integration_id → encrypted_bytes (base64)`
 
-## Bonus (Optional, pick one)
+**Sync Status**
+- Atomic JSON file with `.tmp` + rename
+- `last_sync` stored as ISO 8601 string — human-readable, no datetime serialization issues
+- New vs updated heuristic: `first_seen >= last_sync` → new, `updated_at >= last_sync` → updated
 
-1. **Flask → FastAPI migration:** Show how you'd expose the sync status and trigger manual syncs via a FastAPI endpoint
+**Background Jobs**
+- Beat schedule built dynamically from `config.integration_ids` — adding an integration only requires config change
+- Retry with `countdown=2 ** retries`; after `max_retries=3` logs CRITICAL and returns (dead letter handling)
+- Incremental sync: reads `last_sync` from status file, passes to `fetch_indicators(updated_since=last_sync)`
 
-2. **Sigma rule deployment:** Given a Sigma rule YAML, show how you'd convert it to a Splunk SPL query or CrowdStrike Custom IOA format
-
-3. **Health checks:** Build a `/health` endpoint that checks connector auth validity, last sync status, and credential expiry
-
----
-
-## Tech Requirements
-
-- Python 3.10+
-- `httpx` or `requests` for HTTP
-- `pydantic` for data models
-- Celery, RQ, or APScheduler for jobs
-- `cryptography` (Fernet) for local credential encryption
-- `pytest` for tests
-
----
-
-## What We're Looking For
-
-- **Production patterns:** This is how we actually build connectors. Show us you understand the failure modes.
-- **Error handling:** What happens when the vendor API is down? When creds expire mid-sync? When rate limited?
-- **Incremental sync:** Don't re-fetch everything every time.
-- **Clean abstractions:** Credential store interface, exporter base class, connector pattern.
-- **Tests:** Mock the HTTP layer, test the retry logic, test the export formats.
+**Exporters**
+- Filtering centralized in `BaseExporter.filter()` — concrete exporters never duplicate filter logic
+- `export()` receives an open `IO` object — caller owns file lifecycle, composable with S3 multipart uploads
+- `EdlExporter` hardcodes `indicator_types=[IP, DOMAIN, URL]` — hashes have no meaning in a firewall blocklist
+- STIX uses `stix2` library for schema validation and correct pattern syntax; unknown types are logged and skipped
 
 ---
 
-## What We're NOT Looking For
+## What I'd Improve With More Time
 
-- Actual vendor API access (mock everything)
-- Perfect STIX compliance (close enough is fine)
-- Production deployment configs
-- UI of any kind
-
----
-
-## Submission
-
-1. GitHub repo with code
-2. README with:
-   - Setup instructions
-   - How to run tests
-   - Design decisions
-   - What you'd improve with more time
-3. Email the link to [RECRUITER EMAIL]
-
----
-
-## Questions?
-
-Make reasonable assumptions and document them. Real vendor APIs are messier than this mock. Show us how you'd handle the mess.
+- **Specific exceptions** — replace generic `Exception` in `authenticate()` with a dedicated `AuthenticationError`
+- **`list_all()` on `CredentialStore`** — discover integrations from the store rather than requiring them in config
+- **Credential store factory** — a `get_credential_store()` factory driven by a `CREDENTIAL_BACKEND=local|aws` env var, so the API and tasks never hardcode `LocalCredentialStore`
+- **`integration_ids` from credential store** — currently sourced from config; in prod should be discovered dynamically via `store.list_all()`
+- **S3 export** — `BaseExporter` already accepts any `IO` object; wiring to `boto3.client('s3').upload_fileobj` requires no exporter changes
+- **Structured logging with correlation IDs** — trace a complete sync across worker logs
+- **Dead letter queue** — publish to SNS or a dedicated Celery queue instead of just logging CRITICAL
+- **`last_sync` timezone enforcement** — validate and coerce to UTC at the task boundary rather than relying on convention

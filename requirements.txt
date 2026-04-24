@@ -11,3 +11,4 @@ stix2>=3.0.0
 python-multipart>=0.0.9
 pytest>=8.0.0
 pytest-httpx>=0.30.0
+filelock>=3.13.0

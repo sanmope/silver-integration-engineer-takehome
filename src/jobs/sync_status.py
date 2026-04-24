@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from filelock import FileLock
 
 
 class SyncStatus:
@@ -7,14 +8,15 @@ class SyncStatus:
         self._path = Path(path)
 
     def update(self, integration_id: str, **kwargs) -> None:
-        all_status = {}
-        if self._path.exists():
-            all_status = json.loads(self._path.read_text())
-        
-        current = all_status.get(integration_id, {})
-        current.update(kwargs)
-        all_status[integration_id] = current
-        
+        lock = FileLock(str(self._path) + ".lock")
+        with lock:
+            all_status = {}
+            if self._path.exists():
+                all_status = json.loads(self._path.read_text())
+            
+            current = all_status.get(integration_id, {})
+            current.update(kwargs)
+            all_status[integration_id] = current
 
         #Atomic Write avoids corruption if process dies in the middle
         tmp = self._path.with_suffix('.tmp')

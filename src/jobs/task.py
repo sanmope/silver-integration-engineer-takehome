@@ -54,11 +54,15 @@ def sync_vendor_indicators(self,integration_id: str):
             )
             return sync_result
 
+    except ValueError as exc:
+        logger.error("Credentials not found for %s: %s", integration_id, exc)
+        sync_status.update(integration_id, last_status="failed")
+        return
+
     except Exception as exc:
         if self.request.retries >= self.max_retries:
-            # dead letter handling
             logger.critical("Task permanently failed: %s", integration_id)
             sync_status.update(integration_id, last_status="failed")
-            return  # no re-raise
+            return
         raise self.retry(exc=exc, countdown=2 ** self.request.retries)
 

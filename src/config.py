@@ -35,4 +35,7 @@ class Config(BaseSettings):
     aws_region: str = "us-east-1"
     aws_secret_prefix: str = "augur/"
 
+    # Test
+    BASE_URL = "https://api.threatvendor.example.com"
+
 config = Config() # singleton - accessible from any module

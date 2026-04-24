@@ -3,6 +3,7 @@ import pytest
 from connector import ThreatVendorConnector
 from uuid import UUID
 
+BASE_URL = config.base_url
 
 def test_successful_login(httpx_mock):
 

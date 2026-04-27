@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from models import HealthStatus 
 from credentials.local import LocalCredentialStore
 from connector import ThreatVendorConnector
@@ -66,10 +66,14 @@ def getStatus(integration_id: str | None = None) -> ConnectorHealth:
     if not integration_id:
         integration_id = config.integration_ids[0]
     
-    store = LocalCredentialStore(
-        path = config.credentials_path,
-        fernet_key = config.fernet_key.encode()
-    )
+    try:
+
+        store = LocalCredentialStore(
+            path = config.credentials_path,
+            fernet_key = config.fernet_key.encode()
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=f"Configuration error: {e}")
 
     creds = store.get(integration_id)
     if creds is None:

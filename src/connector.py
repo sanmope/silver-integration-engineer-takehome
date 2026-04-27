@@ -151,6 +151,10 @@ class ThreatVendorConnector():
                     backoff *=2
                     continue
 
+                if e.response.status_code == 401:
+                    logger.error("Authentication failed during fetch")
+                    break
+
 
             dataResponse = response.json()
             has_more = dataResponse["pagination"]["has_more"]

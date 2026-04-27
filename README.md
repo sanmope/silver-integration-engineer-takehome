@@ -41,6 +41,8 @@ python demo.py
 
 The demo auto-generates and saves a `FERNET_KEY` to `.env` if one does not exist.
 
+# Mock vendor API at http://localhost:8000/docs
+
 ### Live Demo
 - Mock Vendor API: https://silver-integration-engineer-takehome-production.up.railway.app/docs
 - API: https://heartfelt-spirit-production-d05b.up.railway.app/docs
@@ -61,6 +63,7 @@ pytest --cov=src --cov-report=term-missing
 ```bash
 PYTHONPATH=src uvicorn src.api.main:app --port 8001 --reload
 ```
+# API available at http://localhost:8001/
 
 | Endpoint | Description |
 |---|---|

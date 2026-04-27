@@ -5,6 +5,7 @@ class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
+        extra = "ignore",
     )
 
     # connector
@@ -35,7 +36,5 @@ class Config(BaseSettings):
     aws_region: str = "us-east-1"
     aws_secret_prefix: str = "augur/"
 
-    # Test
-    BASE_URL = "https://api.threatvendor.example.com"
 
 config = Config() # singleton - accessible from any module

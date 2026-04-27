@@ -15,7 +15,7 @@ def ensure_fernet_key() -> bytes:
     env_path = Path(".env")
     env_content = env_path.read_text() if env_path.exists() else ""
 
-    if "FERNET_KEY=" not in env_content:
+    if "FERNET_KEY=" not in env_content or "your-fernet-key-here" in env_content:
         key = Fernet.generate_key().decode()
         with open(env_path, "a") as f:
             f.write(f"\nFERNET_KEY={key}\n")

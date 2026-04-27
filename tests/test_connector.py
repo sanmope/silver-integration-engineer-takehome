@@ -2,6 +2,7 @@
 import pytest
 from connector import ThreatVendorConnector
 from uuid import UUID
+from config import config
 
 BASE_URL = config.base_url
 

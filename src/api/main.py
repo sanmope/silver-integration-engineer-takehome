@@ -3,7 +3,7 @@ from models import HealthStatus
 from credentials.local import LocalCredentialStore
 from connector import ThreatVendorConnector
 from jobs.sync_status import SyncStatus
-from jobs.task import sync_vendor_indicators
+from jobs.tasks import sync_vendor_indicators
 
 from pydantic import BaseModel
 from datetime import datetime

@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timezone
 from models import Credentials, SyncResult
-from jobs.task import sync_vendor_indicators
+from jobs.tasks import sync_vendor_indicators
 
 
 @pytest.fixture
@@ -32,9 +32,9 @@ def mock_sync_result():
 
 
 def test_sync_success(mock_credentials, mock_sync_result):
-    with patch("jobs.task.LocalCredentialStore") as MockStore, \
-         patch("jobs.task.ThreatVendorConnector") as MockConnector, \
-         patch("jobs.task.SyncStatus") as MockStatus:
+    with patch("jobs.tasks.LocalCredentialStore") as MockStore, \
+         patch("jobs.tasks.ThreatVendorConnector") as MockConnector, \
+         patch("jobs.tasks.SyncStatus") as MockStatus:
 
         MockStore.return_value.get.return_value = mock_credentials
         MockStatus.return_value.load.return_value = None
@@ -53,8 +53,8 @@ def test_sync_success(mock_credentials, mock_sync_result):
 
 
 def test_sync_no_credentials():
-    with patch("jobs.task.LocalCredentialStore") as MockStore, \
-         patch("jobs.task.SyncStatus"):
+    with patch("jobs.tasks.LocalCredentialStore") as MockStore, \
+         patch("jobs.tasks.SyncStatus"):
 
         MockStore.return_value.get.return_value = None
 
@@ -63,9 +63,9 @@ def test_sync_no_credentials():
 
 
 def test_sync_retry_on_failure(mock_credentials):
-    with patch("jobs.task.LocalCredentialStore") as MockStore, \
-         patch("jobs.task.ThreatVendorConnector") as MockConnector, \
-         patch("jobs.task.SyncStatus") as MockStatus:
+    with patch("jobs.tasks.LocalCredentialStore") as MockStore, \
+         patch("jobs.tasks.ThreatVendorConnector") as MockConnector, \
+         patch("jobs.tasks.SyncStatus") as MockStatus:
 
         MockStore.return_value.get.return_value = mock_credentials
         MockStatus.return_value.load.return_value = None

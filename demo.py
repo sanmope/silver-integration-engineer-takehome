@@ -36,7 +36,7 @@ def main():
     from config import config
     from credentials.local import LocalCredentialStore
     from models import Credentials
-    from jobs.task import sync_vendor_indicators
+    from jobs.tasks import sync_vendor_indicators
 
     # 1. Store credentials
     store = LocalCredentialStore(
